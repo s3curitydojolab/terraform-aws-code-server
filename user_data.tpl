@@ -59,104 +59,15 @@ enable_code_server() {
   machinectl shell --uid=${USERNAME} .host /usr/bin/systemctl --user enable --now code-server.service
 }
 
-install_oauth2_proxy() {
-  OAUTH2_PROXY_RELEASE=$(curl -s https://api.github.com/repos/oauth2-proxy/oauth2-proxy/releases/latest \
-  | jq -r ".assets[] | select(.name | test(\"linux-amd64.tar\")) | .browser_download_url")
-  TARBALL=$(echo "$OAUTH2_PROXY_RELEASE" | awk -F'/' '{print $9}')
 
-  wget "$OAUTH2_PROXY_RELEASE"
-  tar -xzf "$TARBALL" -C /usr/local/bin --strip-components=1
-  rm "$TARBALL"
-}
 
-oauth2_proxy_config() {
-  mkdir /etc/oauth2_proxy
-
-  if [ -z ${EMAIL} ]; then
-    EMAIL_CONFIG='email_domains = ["*"]'
-  else
-    EMAIL_CONFIG='authenticated_emails_file = "/etc/oauth2_proxy/email_list.cfg"'
-    echo ${EMAIL} > /etc/oauth2_proxy/email_list.cfg
-  fi
-
-  cat <<EOF > "/etc/oauth2_proxy/oauth2_proxy.cfg"
-## OAuth provider
-provider = "${OAUTH2_PROVIDER}"
-
-## <addr>:<port> to listen on for HTTP/HTTPS clients
- http_address  = "127.0.0.1:4180"
- https_address = ":443"
-
-## Are we running behind a reverse proxy? Will not accept headers like X-Real-Ip unless this is set.
- reverse_proxy = true
-
-## the http url(s) of the upstream endpoint. If multiple, routing is based on path
- upstreams = [
-     "http://127.0.0.1:8080/"
- ]
-
-## Logging configuration
-logging_filename        = "/var/log/oauth2_proxy.log"
-logging_max_size        = 100
-logging_max_age         = 7
-logging_local_time      = true
-logging_compress        = false
-standard_logging        = true
-standard_logging_format = "[{{.Timestamp}}] [{{.File}}] {{.Message}}"
-request_logging         = true
-request_logging_format  = "{{.Client}} - {{.Username}} [{{.Timestamp}}] {{.Host}} {{.RequestMethod}} {{.Upstream}} {{.RequestURI}} {{.Protocol}} {{.UserAgent}} {{.StatusCode}} {{.ResponseSize}} {{.RequestDuration}}"
-auth_logging            = true
-auth_logging_format     = "{{.Client}} - {{.Username}} [{{.Timestamp}}] [{{.Status}}] {{.Message}}"
-
-## pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream
- pass_basic_auth   = true
- pass_user_headers = true
-## pass the request Host Header to upstream
- pass_host_header = true
-
-## Authenticated Email Addresses
- $EMAIL_CONFIG
-
-## The OAuth Client ID, Secret
- client_id     = "${OAUTH2_CLIENT_ID}"
- client_secret = "${OAUTH2_CLIENT_SECRET}"
-
-## Cookie Settings
- cookie_name     = "_oauth2_proxy"
- cookie_secret   = "${COOKIE}"
- cookie_expire   = "168h"
- cookie_refresh  = "1h"
- cookie_secure   = true
- cookie_httponly = true
-
-## Skip Provider Screen
-skip_provider_button = true
-EOF
-}
-
-enable_oauth2_proxy() {
-cat <<EOF > "/etc/systemd/system/oauth2_proxy.service"
-[Unit]
-Description=Oauth2 Proxy
-After=network.target
-[Service]
-ExecStart=oauth2-proxy --config=/etc/oauth2_proxy/oauth2_proxy.cfg
-Restart=on-failure
-RestartSec=5
-User=root
-[Install]
-WantedBy=multi-user.target
-EOF
-
-chmod 0755 /etc/systemd/system/oauth2_proxy.service
-systemctl enable --now oauth2_proxy.service
-}
 
 caddy_config() {
   cat <<EOF > "/etc/caddy/Caddyfile"
 ${DOMAIN}
 
-reverse_proxy 127.0.0.1:4180
+bind 0.0.0.0
+reverse_proxy 127.0.0.1:8080
 EOF
   systemctl restart caddy.service
 }
@@ -175,12 +86,6 @@ main () {
   code_server_config
 
   enable_code_server
-
-  install_oauth2_proxy
-
-  oauth2_proxy_config
-
-  enable_oauth2_proxy
 
   caddy_config
 }
