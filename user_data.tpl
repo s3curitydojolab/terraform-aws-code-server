@@ -59,9 +59,6 @@ enable_code_server() {
   machinectl shell --uid=${USERNAME} .host /usr/bin/systemctl --user enable --now code-server.service
 }
 
-
-
-
 caddy_config() {
   cat <<EOF > "/etc/caddy/Caddyfile"
 ${DOMAIN}
