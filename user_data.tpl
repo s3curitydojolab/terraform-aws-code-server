@@ -34,7 +34,7 @@ update_system() {
 }
 
 install_code_server() {
-  CODE_SERVER_RELEASE=$(curl -s https://api.github.com/repos/cdr/code-server/releases/latest \
+  CODE_SERVER_RELEASE=$(curl -s https://api.github.com/repositories/172953845/releases/latest \
   | jq -r ".assets[] | select(.name | test(\"amd64.deb\")) | .browser_download_url")
   DEB=$(echo "$CODE_SERVER_RELEASE" | awk -F'/' '{print $9}')
 
