@@ -26,21 +26,6 @@ variable "instance_size" {
   default     = "t3.small"
 }
 
-variable "oauth2_client_id" {
-  type        = string
-  description = "OAuth2 client ID key for chosen OAuth2 provider"
-}
-
-variable "oauth2_client_secret" {
-  type        = string
-  description = "OAuth2 client secret key for chosen OAuth2 provider"
-}
-
-variable "oauth2_provider" {
-  type        = string
-  description = "OAuth2 provider"
-}
-
 variable "region" {
   type        = string
   description = "AWS regional endpoint"
