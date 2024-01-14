@@ -49,7 +49,7 @@ variable "region" {
 
 variable "azs" {
   type        = list(string)
-  description = "A list of availability zones names or ids in the region. default is `[\"${var.region}a\", \"${var.region}b\", \"${var.region}c\"]`"
+  description = "A list of availability zones names or ids in the region."
   default     = []
 }
 
