@@ -70,9 +70,6 @@ data "template_file" "user_data" {
     USERPASS             = "${random_password.user.result}",
     GITHUB_USER          = "${var.github_username}",
     DOMAIN               = "${var.domain_name}",
-    OAUTH2_CLIENT_ID     = "${var.oauth2_client_id}",
-    OAUTH2_CLIENT_SECRET = "${var.oauth2_client_secret}",
-    OAUTH2_PROVIDER      = "${var.oauth2_provider}",
     EMAIL                = "${var.email_address}",
     COOKIE               = base64encode("${random_password.cookie.result}")
   }
